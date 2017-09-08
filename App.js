@@ -1,6 +1,7 @@
-
+'use strict'
 import React from 'react';
 import { Dimensions,
+        Alert,
         AppRegistry,
         ActivityIndicator,
         ListView,
@@ -8,16 +9,17 @@ import { Dimensions,
         Image,
         Text,
         View,
+        Button,
         TouchableHighlight,
        } from 'react-native';
 import { StackNavigator } from 'react-navigation';
-import { RowData } from './RowData';
 
 
 class HomeScreen extends React.Component {
   static navigationOptions = {
     title: 'Gallery Grid',
   };
+
 
 
   constructor(props) {
@@ -28,14 +30,11 @@ class HomeScreen extends React.Component {
   }
 
   componentDidMount() {
-    var apiUrl = 'https://api.500px.com/v1/photos';
-    var feature = 'popular';
-    var consumerKey = 'wB4ozJxTijCwNuggJvPGtBGCRqaZVcF6jsrzUadF';
-    var pageSize = 42;
-    var params = '?feature=' + feature + '&consumer_key=' + consumerKey + '&rpp=' + pageSize;
-
-    params += '&image_size=6';
-    var request = apiUrl + params;
+    var apiUrl = 'https://api.500px.com/v1/photos?feature=popular&consumer_key=wB4ozJxTijCwNuggJvPGtBGCRqaZVcF6jsrzUadF';
+    var imageSize = '&image_size=6';
+    var pNumber = 1;
+    var pageN = '&page=' + pNumber;
+    var request = apiUrl + imageSize + pageN;
 
     return fetch(request)
     .then((response) => response.json())
@@ -54,6 +53,18 @@ class HomeScreen extends React.Component {
   }
 
 
+renderFooter = () => {
+  return (
+    <View style={styles.buttonContainer}>
+      <Button
+        onPress ={() => navigate('Image')}
+        title={"Press Me"}
+        color="#841584"
+      />
+    </View>
+  )
+}
+
   render() {
     const { navigate } = this.props.navigation;
     if (this.state.isLoading) {
@@ -65,33 +76,53 @@ class HomeScreen extends React.Component {
     }
 
     return (
-        <ListView
-          contentContainerStyle={styles.listView}
-          dataSource={this.state.dataSource}
+      <View>
+          <ListView
+            contentContainerStyle={styles.listView}
+            dataSource={this.state.dataSource}
 
-          //renderRow={(rowData) => <Text>{rowData.name}</Text>}
-          renderRow={(rowData) => <Image
-          onPress ={() => navigate('ImageView')}
-          style={styles.item}
-          resizeMode={'contain'}
-          source={{uri: rowData.image_url}}/>
-        }
-        />
-
+          renderRow={(rowData) => {
+            return (
+              <TouchableHighlight onPress ={() => navigate('Image', {uri: rowData.image_url})}>
+              <Image
+              style={styles.item}
+              resizeMode={'contain'}
+              source={{uri: rowData.image_url}}
+              renderFooter={this.renderFooter}/>
+              </TouchableHighlight>
+            )
+            }
+          }
+          />
+      </View>
     );
 
   }
 
 }
 
-class ImageViewScreen extends React.Component {
+//--------
+
+class ImageScreen extends React.Component {
   static navigationOptions = {
     title: 'Gallery View',
   };
+  render() {
+    const { params } = this.props.navigation.state;
+    return (
+      <Image
+      style={styles.imageView}
+      resizeMode={'contain'}
+      source={{uri: params.uri}}
+      />
+    );
+  }
 }
 
+//Styles
 
 const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height;
 const styles = StyleSheet.create({
   item: {
     width: (width / 2) - 15,
@@ -100,17 +131,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#383838',
   },
   listView: {
-    paddingTop: 20,
     flexDirection: 'row',
     flexWrap: 'wrap',
     backgroundColor: 'black',
     justifyContent: 'center',
   },
+  imageView: {
+    justifyContent: 'center',
+    flex: 1,
+  },
+  buttonContainer: {
+    margin: 20,
+  },
 });
+
+//Navigation
 
 const GalleryAppNavigator = StackNavigator({
   Home: { screen: HomeScreen },
-  ImageView: { screen: ImageViewScreen },
+  Image: { screen: ImageScreen },
 });
 
 const AppNavigation = () => (
@@ -126,36 +165,4 @@ export default class App extends React.Component {
 }
 
 
-AppRegistry.registerComponent('SimpleApp', () => SimpleApp);
-
-/*import React, { Component } from 'react';
-import { Dimensions,
-        AppRegistry,
-        ActivityIndicator,
-        ListView,
-        StyleSheet,
-        Image,
-        Text,
-        View,
-        TouchableHighlight,
-       } from 'react-native';
-import {
-        StackNavigator,
-      } from 'react-navigation';
-
-import { ImageListScreen } from './ImageListScreen.js';
-
-const App = StackNavigator({
-  ImageList: { screen: ImageList },
-  //ImageViewer: { screen: ImageViewer },
-});
-
-export default class ImageList extends Component {
-  render() {
-    var initialRoute = {name: 'ImageList'};
-  };
-}
-
-
-
-AppRegistry.registerComponent('App', () => App);*/
+AppRegistry.registerComponent('App', () => App);
